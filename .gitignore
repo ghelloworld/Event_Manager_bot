@@ -3,6 +3,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 src/main/java/org/embot/BotToken.java
+src/test/
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
