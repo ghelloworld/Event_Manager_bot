@@ -76,7 +76,6 @@ public class Bot extends TelegramLongPollingBot {
 	private record ButtonListener(@NotNull ButtonHandler handler, int required, @Nullable Long owner, boolean isGroupAllowed) {}
 	private final Hashtable<String, ButtonListener> buttonMap = new Hashtable<>();
 
-	// onUserChat
 	private void onCallbackQuery(@NotNull CallbackQuery callbackQuery) {
 		String data = callbackQuery.getData();
 		/* TODO переделать */
@@ -107,7 +106,6 @@ public class Bot extends TelegramLongPollingBot {
 	private record CommandListener(@NotNull CommandHandler handler, int required, @Nullable Long owner, boolean isGroupAllowed) {}
 	private final Hashtable<String, CommandListener> commandMap = new Hashtable<>();
 
-	// onUserChat
 	private void onCommand(@NotNull Message message) {
 		IR.toCancel(message.getFrom().getId());
 		DM.toCancel(message.getFrom().getId());
@@ -125,20 +123,19 @@ public class Bot extends TelegramLongPollingBot {
 		if (listener != null) {
 			if (!message.isUserMessage() && !listener.isGroupAllowed) return;
 			if (isAllowed(message.getFrom(), listener.required, listener.owner)) {
-                try {
-                    var answer = listener.handler.toHandle(message, parameter);
+				try {
+					var answer = listener.handler.toHandle(message, parameter);
 					if (answer != null)
 						Utils.sendMessage(answer,message.getChatId(),message.getMessageThreadId());
-                } catch (IllegalArgumentException e) { System.out.println(e.getMessage());}
-            }
+				} catch (IllegalArgumentException e) { System.out.println(e.getMessage());}
+			}
 		}
 	}
 
 	//////////////////////// MESSAGES ////////////////////////
-	// onUserChat
 	private void onMessage(Message message) {
 		if (!IR.isProcessed(message)){
-			System.out.println("unhandled message on user chat");
+			System.out.println("unhandled message");
 		}
 	}
 
@@ -148,7 +145,6 @@ public class Bot extends TelegramLongPollingBot {
 		var cond1 = userInfo.hasPermission(required);
 		var cond2 = owner == null || owner.equals(user.getId());
 		var cond3 = userInfo.hasPermission(UserInfo.IGNORE_OWNER);
-		//System.out.println(cond1 + ", " + cond2 + ", " + cond3);
 		return cond1 && (cond2 || cond3);
 	}
 
@@ -165,7 +161,7 @@ public class Bot extends TelegramLongPollingBot {
 		commandMap.put("useroptions",new CommandListener(new CommandHandler() {
 			@Override
 			public MessageRecord toHandle(@NotNull Message message, @Nullable String parameter) {
-                var user = parameterToUserIdInfo(parameter, "Existing user id required");
+				var user = parameterToUserIdInfo(parameter, "Existing user id required");
 				var userId = user.userId;
 				var userInfo = user.userInfo;
 
@@ -184,7 +180,7 @@ public class Bot extends TelegramLongPollingBot {
 		commandMap.put("ban", new CommandListener(new CommandHandler() {
 			@Override
 			public MessageRecord toHandle(@NotNull Message message, @Nullable String parameter) {
-                var userInfo = parameterToUserIdInfo(parameter, "Existing user id required").userInfo;
+				var userInfo = parameterToUserIdInfo(parameter, "Existing user id required").userInfo;
 				userInfo.setBanned(!userInfo.isBanned());
 				return new MessageRecord(null,new TextRecord("Принято!"),null,null);
 			}
@@ -193,7 +189,7 @@ public class Bot extends TelegramLongPollingBot {
 		commandMap.put("setfirstname", new CommandListener(new CommandHandler() {
 			@Override
 			public MessageRecord toHandle(@NotNull Message message, @Nullable String parameter) {
-                var userInfo = parameterToUserIdInfo(parameter, "Existing user id required").userInfo;
+				var userInfo = parameterToUserIdInfo(parameter, "Existing user id required").userInfo;
 				var request = new MessageRecord(null,new TextRecord("Введите имя:"),null,null);
 				IR.toMakeRequest(message.getFrom().getId(), message.getChatId(), message.getMessageThreadId(), request, new IR.OnAnswer() {
 					@Override
@@ -220,13 +216,6 @@ public class Bot extends TelegramLongPollingBot {
 
 	private record UserIdInfo(long userId, @NotNull UserInfo userInfo) {}
 
-    /*private @NotNull UserInfo parameterToUserInfo(@Nullable String parameter, @NotNull String reportMessage) {
-        long userId = parameterToLong(parameter,reportMessage);
-        var userInfo = Data.userMap.get(userId);
-        if (userInfo == null) throw new IllegalArgumentException(reportMessage);
-        return userInfo;
-    }*/
-
 	private @NotNull UserIdInfo parameterToUserIdInfo(@Nullable String parameter, @NotNull String reportMessage) {
 		long userId = parameterToLong(parameter,reportMessage);
 		var userInfo = Data.userMap.get(userId);
@@ -234,10 +223,10 @@ public class Bot extends TelegramLongPollingBot {
 		return new UserIdInfo(userId, userInfo);
 	}
 
-    private long parameterToLong(@Nullable String parameter, @NotNull String reportMessage) {
-        if (parameter == null) throw new IllegalArgumentException(reportMessage);
-        long value;
-        try { value = Long.parseLong(parameter); } catch (NumberFormatException e) { throw new IllegalArgumentException(reportMessage); }
-        return value;
-    }
+	private long parameterToLong(@Nullable String parameter, @NotNull String reportMessage) {
+		if (parameter == null) throw new IllegalArgumentException(reportMessage);
+		long value;
+		try { value = Long.parseLong(parameter); } catch (NumberFormatException e) { throw new IllegalArgumentException(reportMessage); }
+		return value;
+	}
 }
